@@ -43,6 +43,21 @@ def temperament_test():
 
     return name, temperament
 
+def colour_test():
+    print("Heyy how are you feeling today?")
+    name = input("Enter your name: ")
+
+    print("Answer the following questions:")
+    colours = {"yellow":"happy","Red":"passionate","Black":"Sad","Blue":"Peaceful","Pink":"Feminine","White":"pure","Orange":"Excited","Neutral":"Neutral"}
+    q1 = input(f"Choose a colour {colours.keys()}:")
+
+    # Determine temperament based on user answers
+    mood = colours.get(q1, "Unknown")  # Return "Unknown" if colour is not found
+
+    print(f"{name}, your mood is {mood}.")
+
+    return name, mood
+
 
 # Function to save the result to the database
 def save_to_database(name, temperament):
@@ -61,7 +76,8 @@ def save_to_database(name, temperament):
 
 # Main function
 if __name__ == "__main__":
-    user_name, user_temperament = temperament_test()
-    save_to_database(user_name, user_temperament)
+    # user_name, user_temperament = temperament_test()
+    user_name, mood = colour_test()
+    save_to_database(user_name, mood)
 
 

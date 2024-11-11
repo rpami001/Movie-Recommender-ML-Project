@@ -1,0 +1,44 @@
+def get_user_temperament():
+    print("Welcome to the Movie Recommender based on your Temperament!")
+    # Simple example question
+    questions = [
+        "Do you enjoy spending time with large groups of people? (yes/no): ",
+        "Do you prefer practical and realistic solutions over imaginative ideas? (yes/no): ",
+        # Add more questions as needed...
+    ]
+
+    answers = []
+    for question in questions:
+        answer = input(question)
+        answers.append(answer.lower())
+
+    return answers
+
+def analyze_temperament(answers):
+    # Simple logic to determine the temperament
+    if answers[0] == "yes" and answers[1] == "no":
+        return "Extroverted, Intuitive"
+    elif answers[0] == "no" and answers[1] == "yes":
+        return "Introverted, Sensing"
+    # Add more conditions based on other questions...
+    else:
+        return "Mixed Temperament"
+
+def recommend_movies(temperament):
+        recommendations = {
+            "Extroverted, Intuitive": ["Guardians of the Galaxy", "Pulp Fiction"],
+            "Introverted, Sensing": ["The Shawshank Redemption", "The Martian"],
+            "Mixed Temperament": ["Forrest Gump", "Inception"]
+        }
+
+        return recommendations.get(temperament, ["No recommendations available"])
+
+def main():
+    answers = get_user_temperament()
+    temperament = analyze_temperament(answers)
+    movie_list = recommend_movies(temperament)
+    print(f"Based on your temperament, we recommend the following movies: {', '.join(movie_list)}")
+
+# Run the script
+if __name__ == "__main__":
+    main()

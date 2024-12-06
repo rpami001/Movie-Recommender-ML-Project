@@ -1,6 +1,7 @@
 import mysql.connector
 import getpass
 import hashlib
+import Movie_recommender as mr
 
 def connect_to_db():
     #connect to database
@@ -116,12 +117,16 @@ def collect_user_info():
     elif p.lower() in ["No", "no", "NO"]:
          user_name, password , temperament = temperament_test()
          register_user( user_name, password , temperament)
-        
+
+def recommend_movie(mood):
+    return mr.recommend_movies_based_on_user_mood(mood, mr.df, 5 )    
 
 # Main function
 if __name__ == "__main__":
-    # user_name, user_temperament = temperament_test()
-    print("Welcome to your emotion movie detector!")
-    collect_user_info()
+    user_name,password, user_temperament = temperament_test()
+    # print("Welcome to your emotion movie detector!")
+    # collect_user_info()
+    results = recommend_movie(user_temperament)
+    print(results)
     
 

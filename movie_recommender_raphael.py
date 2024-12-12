@@ -232,7 +232,7 @@ def recommend_movies_based_on_user_mood(user_mood, movies, top_n=5):
     #print(f'M<MOD: {user_mood}')
     print(f'{result}')
 
-    return result['movie_name'].tolist()
+    return result[['movie_name', 'genre']].values.tolist()
     # Get the top N movies based on the user's mood, highest rating, and latest year
     #return recommended_movies_sorted[['movie_name', 'genre', 'year', 'rating']].head(top_n)
 

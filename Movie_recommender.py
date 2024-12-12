@@ -4,6 +4,10 @@ import glob
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 import nltk
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from sklearn.decomposition import TruncatedSVD
+
 # cobine the movies into one dataset
 # csv_files = glob.glob("Movies/*.csv")
 
@@ -16,7 +20,7 @@ import nltk
 # movies = all_movies.drop_duplicates(subset=['movie_name'], keep='first')
 # movies.to_csv('combined_movies.csv', index=False)
 # read csv file as dataframe
-movies1 = pd.read_csv("C:\\Users\\vtebo\\Movie-Recommender-ML-Project\\combined_movies.csv")
+movies1 = pd.read_csv("combined_movies.csv")
 #shuffle data so it is not biased
 shuffled_data = movies1.sample(frac=1, random_state=42).reset_index(drop=True)
 # Reduce data set to ease train
@@ -67,6 +71,8 @@ tfidf_keywords = vectorizer.get_feature_names_out()
 from scipy.sparse import hstack
 X_combined = hstack([X, X1])
 
+
+
 from sklearn.cluster import KMeans
 import numpy as np
 
@@ -78,6 +84,86 @@ kmeans.fit(X_combined)
 
 # Assign cluster labels to reviews
 df['sentiment_cluster'] = kmeans.labels_
+
+svd_df = pd.DataFrame(data=X.toarray())
+
+# Create a DataFrame with the reduced components
+svd_df_1 = pd.DataFrame(data=X1.toarray())
+
+print(svd_df_1)
+
+# Concatenate DataFrames by columns
+concatenated_df = pd.concat([svd_df, svd_df_1], axis=1)
+print(concatenated_df)
+
+# Apply KMeans clustering
+num_clusters = 6  # Adjust the number of clusters as needed
+kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+kmeans.fit(concatenated_df)
+
+# Assign cluster labels to reviews
+concatenated_df['sentiment_cluster'] = kmeans.labels_
+# Convert column names to strings 
+concatenated_df.columns = concatenated_df.columns.astype(str)
+print(concatenated_df)
+
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Assuming concatenated_df is your DataFrame
+# Drop the 'sentiment_cluster' column if it's already added
+# features_df = concatenated_df.drop('sentiment_cluster', axis=1)
+
+# Standardize the data
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(concatenated_df)
+
+# Perform PCA
+pca = PCA(n_components=400)  # Adjust the number of components as needed
+principal_components = pca.fit_transform(scaled_data)
+
+# Create a DataFrame with the principal components
+pca_df = pd.DataFrame(data=principal_components)
+
+# Apply KMeans clustering
+num_clusters = 6  # Adjust the number of clusters as needed
+kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+kmeans.fit(pca_df)
+# Optionally add the cluster labels back to the DataFrame
+pca_df['sentiment_cluster'] = kmeans.labels_
+
+print(pca_df)
+# Combine the original data with concatenated_df
+combined_df = pd.concat([df[['movie_name', 'rating', 'genre']], concatenated_df], axis=1)
+
+print(combined_df)
+
+
+# Evaluate the model 
+#from sklearn.metrics import silhouette_score
+#sillhouette_avg = silhouette_score(pca_df.drop('sentiment_cluster', axis=1), pca_df['sentiment_cluster'])
+#print(f'Sillhouette Score: {sillhouette_avg}')
+
+#X_pca = pca_df.drop('sentiment_cluster')
+Y_pca = pca_df['sentiment_cluster']
+X_pca = pca_df.drop(columns = 'sentiment_cluster')
+# Split data into training and test sets
+X_train, X_test, Y_train, Y_test = train_test_split(X_pca, Y_pca, test_size=0.2, random_state=42)
+
+# Train KMeans clustering model
+num_clusters = 6
+kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+kmeans.fit(X_train)
+
+# Assign cluster labels to training data
+#Y_train['sentiment_cluster'] = kmeans.labels_
+
+# Predict cluster labels for the test set
+test_labels = kmeans.predict(X_test)
+
+ari_score = adjusted_rand_score(Y_test, test_labels)
+print(ari_score)
 
 # Now we perform exploratory data analysis, we begin by converting the year column to an integer
 # Custom function to convert Roman numerals to integers
@@ -115,20 +201,47 @@ df['rating'] = df['rating'].fillna(np.mean(df['rating']))
 # recommendation is performed by comparing the user's mood with the label of the movies then the movies are recommended first of all based on ratings, then year.
 def recommend_movies_based_on_user_mood(user_mood, movies, top_n=5):
     # Filter movies based on the user's mood
-    if user_mood == 'melancholic':
-        recommended_movies = movies[movies['sentiment_cluster'] == 3]
-    elif user_mood == 'sanguine':
-        recommended_movies = movies[movies['sentiment_cluster'] == 2]
+    if user_mood == 'Excitement':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 1) | (movies['sentiment_cluster'] == 5)]
+    elif user_mood == 'Sad':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 0)]
+    elif user_mood == 'Feminine':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 4) | (movies['sentiment_cluster'] == 2)]
+    elif user_mood == 'Passionate':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 2) | (movies['sentiment_cluster'] == 3) | (movies['sentiment_cluster'] == 5)]  
+    elif user_mood == 'Happy':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 1) | (movies['sentiment_cluster'] == 0)]
+    elif user_mood == 'Pure':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 3)]
+    elif user_mood == 'Melancholic':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 0)]
+    elif user_mood == 'Sanguine':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 4) | (movies['sentiment_cluster'] == 2)]
+    elif user_mood == 'Choleric':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 2) | (movies['sentiment_cluster'] == 3) | (movies['sentiment_cluster'] == 5)]
+    elif user_mood == 'Phlegmatic':
+        recommended_movies = movies[(movies['sentiment_cluster'] == 1) | (movies['sentiment_cluster'] == 0)]
     else:  # neutral mood
-        recommended_movies = movies[movies['sentiment_cluster'] == 1]
-    
+        recommended_movies = movies[(movies['sentiment_cluster'] == 0)]
+
     # Sort the filtered movies by 'rating' (highest first) and then by 'year' (latest first)
     recommended_movies_sorted = recommended_movies.sort_values(by=['rating', 'year'], ascending=[False, False])
     
+    result = recommended_movies_sorted[['movie_name', 'genre', 'year', 'rating', 'sentiment_cluster']].head(top_n)
+
+    #print(f'M<MOD: {user_mood}')
+    print(f'{result}')
+
+    return result[['movie_name', 'genre']].values.tolist()
     # Get the top N movies based on the user's mood, highest rating, and latest year
-    return recommended_movies_sorted[['movie_name', 'genre', 'year', 'rating']].head(top_n)
+    #return recommended_movies_sorted[['movie_name', 'genre', 'year', 'rating']].head(top_n)
+
 
 # Recommend movies based on user's mood
-# recommended_movies = recommend_movies_based_on_user_mood("positve", df, 5)
+#recommended_movies = recommend_movies_based_on_user_mood("positve", df, 5)
+#recommended_movies_1 = recommend_movies_based_on_user_mood("melancholic", df, 5)
+#recommended_movies_2 = recommend_movies_based_on_user_mood("sanguine", df, 5)
 # print("Recommended Movies based on your mood:")
-# print(recommended_movies)
+#print(f'TEST1: {recommended_movies}')
+#print(f'TEST2: {recommended_movies_1}')
+#print(f'TEST3: {recommended_movies_2}')

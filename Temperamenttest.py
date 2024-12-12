@@ -79,7 +79,7 @@ def colour_test():
 
     print(f"your mood is {mood}.")
 
-    return  mood
+    return mood
 
 def login_user(name, password):
     connection = connect_to_db()
@@ -127,6 +127,6 @@ if __name__ == "__main__":
     # print("Welcome to your emotion movie detector!")
     # collect_user_info()
     results = recommend_movie(user_temperament)
-    print(results)
+ 
     
 

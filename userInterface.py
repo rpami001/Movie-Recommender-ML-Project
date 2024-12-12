@@ -196,7 +196,7 @@ class MovieRecommenderApp:
         print(self.temperament)
 
         # Enable Registration Button
-        self.register_btn.config(state=NORMAL)
+        #self.register_btn.config(state=NORMAL)
 
         # Display temperament and fetch movie recommendations
         self.result_label.config(text=f"Your temperament is: {self.temperament}")
@@ -205,10 +205,10 @@ class MovieRecommenderApp:
         recommendations = recommend_movies_based_on_user_mood(self.temperament, Movie_recommender.df)
         print(recommendations)
 
-        recommendation_text = "\n".join([f"• {movie}" for movie in recommendations])
+        recommendation_text = "\n".join([f"• {movie[0]} - Genre: {movie[1]}" for movie in recommendations])
 
 
-        self.recommendation_label.config(text=f"Movie Recommendations: \n {recommendation_text}")
+        self.recommendation_label.config(text=f"Movie Recommendations and Genre: \n {recommendation_text}")
         self.recommendation_label.grid(column=0, row=20, columnspan=4, pady=10)
 
 if __name__ == "__main__":
